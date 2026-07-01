@@ -1,0 +1,72 @@
+name: Build Fork APK
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/src/main/res/layout/dialog_bookshelf_config.xml'
+      - 'app/src/main/res/values*/strings.xml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Build App Debug APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleAppDebug --build-cache --parallel --daemon --warning-mode all
+
+      - name: Organize APK files
+        run: |
+          mkdir -p ${{ github.workspace }}/apk/
+          cp -rf ${{ github.workspace }}/app/build/outputs/apk/app/debug/*.apk ${{ github.workspace }}/apk/
+          echo "APK files:"
+          ls -la ${{ github.workspace }}/apk/
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: legado-fork-app-debug
+          path: ${{ github.workspace }}/apk/*.apk
+
+      - name: Generate Release Tag
+        id: tag
+        run: |
+          echo "tag=v$(date -d '8 hour' -u +3.%y.%m%d%H%M)" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Legado Fork ${{ steps.tag.outputs.tag }}
+          tag_name: ${{ steps.tag.outputs.tag }}
+          body: |
+            ## Legado Fork APK (Grid 9 Columns)
+
+            Fork from Luoyacheng/legado with bookshelf grid extended to 9 columns.
+
+            ### Changes
+            - Bookshelf grid layout options: Grid-2 through Grid-9 (was Grid-6 max)
+            - Modified: dialog_bookshelf_config.xml
+            - Added: string resources for all locales
+
+            ### Build Info
+            - Variant: app-debug (unsigned)
+            - Version: ${{ steps.tag.outputs.tag }}
+          draft: false
+          prerelease: false
+          files: ${{ github.workspace }}/apk/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
