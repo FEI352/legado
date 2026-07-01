@@ -62,6 +62,9 @@
     <string name="layout_grid4">Grade-4</string>
     <string name="layout_grid5">Grade-5</string>
     <string name="layout_grid6">Grade-6</string>
+    <string name="layout_grid7">Grade-7</string>
+    <string name="layout_grid8">Grade-8</string>
+    <string name="layout_grid9">Grade-9</string>
     <string name="bookshelf_layout">Layout</string>
     <string name="view">Vista</string>
     <string name="book_library">Biblioteca</string>
